@@ -1,6 +1,6 @@
 // Firebase Configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword ,signInWithEmailAndPassword , onAuthStateChanged , sendEmailVerification , signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword ,signInWithEmailAndPassword , onAuthStateChanged , sendEmailVerification , signOut , signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCuhktl2yJKAfFKGiYCS_xgy-FKFkvRGgg",
@@ -15,6 +15,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
+const provider = new GoogleAuthProvider();
 // Export required methods for `index.js`
-export { auth, createUserWithEmailAndPassword , signInWithEmailAndPassword ,  onAuthStateChanged , sendEmailVerification , signOut};
+export { auth, getAuth, createUserWithEmailAndPassword , signInWithEmailAndPassword ,  onAuthStateChanged , sendEmailVerification , signOut,  signInWithPopup, GoogleAuthProvider };
