@@ -7,7 +7,10 @@ import {
     sendEmailVerification, 
     signOut, 
     signInWithPopup, 
-    GoogleAuthProvider 
+    GoogleAuthProvider,
+    db,  
+    addDoc, 
+    collection,getDocs , doc, setDoc
 } from "./firebase.js";
 
 // Initialize Google Auth Provider
@@ -15,19 +18,24 @@ const provider = new GoogleAuthProvider();
 
 // Function to validate email format
 const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 };
 
 // Function to validate password strength
 const isValidPassword = (password) => {
-    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g; // Minimum 6 characters, at least one letter and one number
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
     return passwordRegex.test(password);
 };
 
-let signUp = () => {
+let signUp = async () => {
+    let name = document.getElementById("name").value;
+    let number = document.getElementById("number").value;
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
+
+    let userData = { name, number, email, password };
+    console.log(userData);
 
     // Validate email and password
     if (!isValidEmail(email)) {
@@ -36,21 +44,50 @@ let signUp = () => {
     }
 
     if (!isValidPassword(password)) {
-        alert("Password must be at least 6 characters long and include at least one letter and one number.");
+        alert("Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, and one number.");
         return;
     }
 
-    // Proceed to create user if validation passes
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            console.log("User created:", user);
-            window.location.href = "signin.html"; // Redirect to sign-in page after successful sign-up
-        })
-        .catch((error) => {
-            console.log("Error:", error.message);
-            alert("Error: " + error.message); // Display error to the user
-        });
+    // try {
+    //     // Create user in Firebase Auth
+    //     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    //     const user = userCredential.user;
+
+    //     // Add user data to Firestore
+    //     const docRef = await addDoc(collection(db, "users"), {
+    //         ...userData,
+    //         uId: user.uid  // Fixed from `user.uId` to `user.uid`
+    //     });
+
+    //     console.log("Document written with ID:", docRef.id);
+    //     alert("Signup Successful");
+    //     // window.location.href = "signin.html"; // Redirect to sign-in page after successful sign-up
+    // } catch (error) {
+    //     console.error("Error:", error.message);
+    //     alert("Error: " + error.message);
+    // }
+
+//  -----------------set doc---------
+try {
+    // Sign up the user and get the user object
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    const docRef = doc(db, "userdata", user.uid); // Now `user` is defined
+    await setDoc(docRef, {
+        ...userData,
+        uId: user.uid
+    });
+
+    console.log("Document written with ID:", docRef.id);
+    alert("Signup Successful");
+} catch (error) {
+    console.error("Error:", error.message);
+    alert("Error: " + error.message);
+}
+
+
+
 };
 
 // Add event listener for Sign Up button
@@ -61,7 +98,7 @@ if (sign_Up) {
 
 // Sign In function
 let sign_In = (event) => {
-    event.preventDefault(); // Prevent form submission (for form elements)
+    event.preventDefault(); // Prevent form submission if using form elements
 
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
@@ -73,7 +110,8 @@ let sign_In = (event) => {
             window.location.href = "main.html";
         })
         .catch((error) => {
-            alert("Error:", error.message);
+            console.error("Error:", error.message);
+            alert("Error: " + error.message);
         });
 };
 
@@ -94,13 +132,17 @@ onAuthStateChanged(auth, (user) => {
 
 // Function to send email verification
 let sendMail = () => {
-    sendEmailVerification(auth.currentUser)
-        .then(() => {
-            alert("Email verification sent");
-        })
-        .catch((error) => {
-            console.log("Error sending verification email:", error.message);
-        });
+    if (auth.currentUser) {
+        sendEmailVerification(auth.currentUser)
+            .then(() => {
+                alert("Email verification sent");
+            })
+            .catch((error) => {
+                console.error("Error sending verification email:", error.message);
+            });
+    } else {
+        alert("No user is currently signed in.");
+    }
 };
 
 // Add event listener to Email Verification button
@@ -111,12 +153,14 @@ if (verification) {
 
 // Sign Out function
 let signout = () => {
-    signOut(auth).then(() => {
-        console.log("Sign-out successful.");
-        window.location.href = "signin.html"; // Redirect to sign-in page after successful sign-out
-    }).catch((error) => {
-        console.log("Error during sign-out:", error.message);
-    });
+    signOut(auth)
+        .then(() => {
+            console.log("Sign-out successful.");
+            window.location.href = "signin.html"; // Redirect to sign-in page after successful sign-out
+        })
+        .catch((error) => {
+            console.error("Error during sign-out:", error.message);
+        });
 };
 
 // Add event listener to Sign Out button
@@ -145,3 +189,11 @@ const googleBtn = document.getElementById("google");
 if (googleBtn) {
     googleBtn.addEventListener("click", googleSignin);
 }
+let getData = async()=>
+{
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach((doc) => {
+      console.log(`${doc.id} => ${doc.data()}`);
+    });
+}
+getData()
