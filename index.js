@@ -10,7 +10,8 @@ import {
     GoogleAuthProvider,
     db,  
     addDoc, 
-    collection,getDocs , doc, setDoc
+    collection,getDocs , doc, setDoc,updateDoc,serverTimestamp,
+    arrayUnion, arrayRemove, deleteDoc
 } from "./firebase.js";
 
 // Initialize Google Auth Provider
@@ -81,6 +82,7 @@ try {
 
     console.log("Document written with ID:", docRef.id);
     alert("Signup Successful");
+    window.location.href = "signin.html"; 
 } catch (error) {
     console.error("Error:", error.message);
     alert("Error: " + error.message);
@@ -197,3 +199,52 @@ let getData = async()=>
     });
 }
 getData()
+const Update = document.getElementById("update");
+if (googleBtn) {
+    Update.addEventListener("click", UpdateProfile);
+}
+let UpdateProfile = async () => {
+    let name = document.getElementById("name").value;
+    let phone = document.getElementById("phone").value;
+    let password = document.getElementById("password").value;
+
+    if (auth.currentUser) {
+        let id = auth.currentUser.uid;
+
+        try {
+            const washingtonRef = doc(db, "userdata", id);
+            await updateDoc(washingtonRef, { name,
+                 phone, 
+                 password,
+                 timestamp: serverTimestamp(),
+                //  subject:["Eng" , "Urdu"],
+                //  subject:arrayUnion("Math"),
+                //  subject:arrayRemove("Eng")
+                }
+                );
+            alert("Updated");
+        } catch (e) {
+            console.error("Error updating document:", e);
+        }
+    } else {
+        alert("You must be signed in to update your profile.");
+    }
+};
+// Attach event listener for update button
+let update = document.getElementById("update");
+if (update) {
+    update.addEventListener("click", UpdateProfile); // Attach event listener once
+}
+
+let deleteAccount=async()=>
+{
+  let id = auth.currentUser.uid
+  console.log(id);
+  await deleteDoc(doc(db, "userdata", id));
+  alert("Delete Successfully")
+}
+
+let deleteButton = document.getElementById("delete");
+if (deleteButton) {
+    deleteButton.addEventListener("click", deleteAccount);
+}
